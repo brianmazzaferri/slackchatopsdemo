@@ -1,0 +1,32 @@
+{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "static_select",
+					"placeholder": {
+						"type": "plain_text",
+						"text": "Select Approved PR",
+						"emoji": true
+					},
+					"options": [
+						{
+							"text": {
+								"type": "plain_text",
+								"text": "ACME-6157 add new phoenix functionality ",
+								"emoji": true
+							},
+							"value": "value-0"
+						},
+						{
+							"text": {
+								"type": "plain_text",
+								"text": "ACME-6130 refactor database sharding",
+								"emoji": true
+							},
+							"value": "value-1"
+						}
+					],
+					"action_id":"prchosen"
+				}
+			]
+		}

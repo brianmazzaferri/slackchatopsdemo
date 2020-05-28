@@ -1,0 +1,26 @@
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Yes",
+						"emoji": true
+					},
+					"style": "primary",
+					"value": "click_me_123",
+					"action_id": "confirmrelease"
+				},
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "No",
+						"emoji": true
+					},
+					"style": "danger",
+					"value": "click_me_123"
+				}
+			]
+		}
