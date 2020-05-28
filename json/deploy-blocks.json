@@ -1,0 +1,19 @@
+[
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "USER is deploying *IDVAR*\n*Repo:* acme-IDVAR"
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": ":white_check_mark:  1. Created at TIMESTAMP\n :large_blue_circle:  2. Executing GithubToken"
+			}
+		}
+	]
