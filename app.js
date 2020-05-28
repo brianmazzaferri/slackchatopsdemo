@@ -480,6 +480,76 @@ app.action("deployqa", async ({ ack, body, context }) => {
   }
 });
 
+//listener for yes button on deploy to prod
+app.action("deployprod", async ({ ack, body, context }) => {
+  await ack();
+  try {
+    let storedObj = await queryOne({ name: "storageObj" });
+    let storedObj2 = nextLine(
+      storedObj,
+      "\n :large_blue_circle:  31. Executing Confirm Choice 1",
+      true,
+      body.message.ts,
+      body.channel.id,
+      500
+    );
+    let storedObj3 = nextLine(
+      storedObj2,
+      "\n :large_blue_circle:  32. Executing SyncFilesToS3",
+      true,
+      body.message.ts,
+      body.channel.id,
+      1000
+    );
+    let storedObj4 = nextLine(
+      storedObj3,
+      "\n :large_blue_circle:  33. Synching directory /tmp/ACMEDevBot--1f031139-89eb-4dd8-9f21-dd8bae8d88f7-deploy3478279416825419021 to S3 Bucket\nstatic.prod.acmeenterprises.com ",
+      true,
+      body.message.ts,
+      body.channel.id,
+      1500
+    );
+    let storedObj5 = nextLine(
+      storedObj4,
+      "\n :large_blue_circle:  34. Executing SetCommitStatus",
+      true,
+      body.message.ts,
+      body.channel.id,
+      2000
+    );
+    let storedObj6 = nextLine(
+      storedObj5,
+      "\n :large_blue_circle:  35. Executing PushReleaseToMaster",
+      true,
+      body.message.ts,
+      body.channel.id,
+      2500
+    );
+    let storedObj7 = nextLine(
+      storedObj6,
+      "\n :large_blue_circle:  36. Pushed release caaf67b0a036f07304d3038f924c12a703c83503 to master",
+      true,
+      body.message.ts,
+      body.channel.id,
+      3000
+    );
+    
+/*    setTimeout(() => {
+      storedObj8.storedblocks[2].text.text = "Deploy to Prod?";
+      const deployprod = require("./json/deploy-prod");
+      storedObj8.storedblocks.push(deployprod);
+      const result2 = app.client.chat.update({
+        token: context.botToken,
+        ts: body.message.ts,
+        channel: body.channel.id,
+        blocks: storedObj8.storedblocks
+      });
+    }, 4500);*/
+  }catch(error){
+    console.error(error);
+  }
+});
+
 //append to the end of body section of storedBlocks
 function nextLine(storedObj, appendage, deletetop, ts, channel, timeout) {
   setTimeout(async () => {
