@@ -88,8 +88,11 @@ app.action("yesdeploy", async ({ ack, body, context }) => {
       "-" +
       today.getDate();
     let time =
-      today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      today.getHours() + ":" + today.getMinutes();
     let dateTime = date + " " + time;
+    let startTime = {name:"startTime"};
+    startTime.startTime = dateTime;
+    db.insert(startTime);
     objnew = objnew.replace("TIMESTAMP", dateTime);
     objnew = objnew.replace("USER", uservar);
     const result = app.client.chat.update({
@@ -232,9 +235,9 @@ app.action("prchosen", async ({ ack, body, context }) => {
       storedObj10.storedblocks.push(releasebuttons);
       let storedObj11 = replaceBody(
         storedObj10,
-        "Confirm release of ACME-6157 add new Phoenix functionality\n\nCommits:\n" +
+        "*Confirm release of ACME-6157 add new Phoenix functionality*\n\nCommits:\n```" +
           uservar +
-          " - ACME-6157 add new Phoenix functionality\n\nDiff:\nMOD src/Workflow/WorkflowLibrary/WorkflowLibrary.js",
+          " - ACME-6157 add new Phoenix functionality```\n\nDiff:\n```MOD src/Workflow/WorkflowLibrary/WorkflowLibrary.js```",
         body.message.ts,
         body.channel.id,
         500
@@ -534,7 +537,7 @@ app.action("deployprod", async ({ ack, body, context }) => {
       3000
     );
 
-    setTimeout(() => {
+    setTimeout(async () => {
       storedObj7.storedblocks[2].text.text = storedObj.storedblocks[2].text.text.replace(
         ":large_blue_circle:",
         ":white_check_mark:"
@@ -557,13 +560,11 @@ app.action("deployprod", async ({ ack, body, context }) => {
       "-" +
       today.getDate();
       let time =
-      today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      today.getHours() + ":" + today.getMinutes();
       let dateTime = date + " " + time;
-      let time2 = 
-          today.getHours() + ":" + today.getMinutes()-5 + ":" + today.getSeconds()-3;
-      let dateTime2 = date + " " + time2;
+      let startTime = await queryOne({name:"startTime"});
       deployfinished.text.text = deployfinished.text.text.replace("ENDTIME",dateTime);
-      deployfinished.text.text = deployfinished.text.text.replace("STARTTIME",dateTime2);
+      deployfinished.text.text = deployfinished.text.text.replace("STARTTIME",startTime.startTime);
       storedObj7.storedblocks.push(divider);
       storedObj7.storedblocks.push(deployfinished);
       const result2 = app.client.chat.update({
