@@ -351,7 +351,7 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
         }
       );
     }, 8800);
-    
+
     setTimeout(async () => {
       storedObj10.storedblocks[4].text.text =
         ":circleci: CircleCI Build <circleci.com|#8281> :circleci: - Not Started\n:loading:  *Waiting for CircleBuild*  :loading:";
@@ -365,13 +365,13 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
     for (let i = 1; i < 8; i++) {
       storedObj10 = await circleTimer(
         storedObj10,
-        i*5,
+        i * 5,
         true,
         body.message.ts,
         body.channel.id,
-        8900+(i*5000)
+        8900 + i * 5000
       );
-    };
+    }
     setTimeout(() => {
       storedObj10.storedblocks[2].text.text = "Deploy to QA?";
       const deployqa = require("./json/deploy-qa");
@@ -475,7 +475,7 @@ app.action("deployqa", async ({ ack, body, context }) => {
         blocks: storedObj8.storedblocks
       });
     }, 4500);
-  }catch(error){
+  } catch (error) {
     console.error(error);
   }
 });
@@ -533,19 +533,47 @@ app.action("deployprod", async ({ ack, body, context }) => {
       body.channel.id,
       3000
     );
-    
-/*    setTimeout(() => {
-      storedObj8.storedblocks[2].text.text = "Deploy to Prod?";
-      const deployprod = require("./json/deploy-prod");
-      storedObj8.storedblocks.push(deployprod);
+
+    setTimeout(() => {
+      storedObj7.storedblocks[2].text.text = storedObj.storedblocks[2].text.text.replace(
+        ":large_blue_circle:",
+        ":white_check_mark:"
+      );
+      const divider = {
+			  "type": "divider"
+		  }
+      const deployfinished = {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: ":white_check_mark: DEPLOYMENT FINISHED :white_check_mark:\n*Started At:* STARTTIME \n*Finished At:* ENDTIME \n*Duration:* 5 minutes"
+        }
+      };
+      let today = new Date();
+      let date =
+      today.getFullYear() +
+      "-" +
+      (today.getMonth() + 1) +
+      "-" +
+      today.getDate();
+      let time =
+      today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      let dateTime = date + " " + time;
+      let time2 = 
+          today.getHours() + ":" + today.getMinutes()-5 + ":" + today.getSeconds()-3;
+      let dateTime2 = date + " " + time2;
+      deployfinished.text.text = deployfinished.text.text.replace("ENDTIME",dateTime);
+      deployfinished.text.text = deployfinished.text.text.replace("STARTTIME",dateTime2);
+      storedObj7.storedblocks.push(divider);
+      storedObj7.storedblocks.push(deployfinished);
       const result2 = app.client.chat.update({
         token: context.botToken,
         ts: body.message.ts,
         channel: body.channel.id,
-        blocks: storedObj8.storedblocks
+        blocks: storedObj7.storedblocks
       });
-    }, 4500);*/
-  }catch(error){
+    }, 4500);
+  } catch (error) {
     console.error(error);
   }
 });
