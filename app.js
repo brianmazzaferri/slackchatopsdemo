@@ -88,8 +88,11 @@ app.action("yesdeploy", async ({ ack, body, context }) => {
       "-" +
       today.getDate();
     let time =
-      today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      today.getHours() + ":" + today.getMinutes();
     let dateTime = date + " " + time;
+    let startTime = {name:"startTime"};
+    startTime.startTime = dateTime;
+    db.insert(startTime);
     objnew = objnew.replace("TIMESTAMP", dateTime);
     objnew = objnew.replace("USER", uservar);
     const result = app.client.chat.update({
@@ -232,9 +235,9 @@ app.action("prchosen", async ({ ack, body, context }) => {
       storedObj10.storedblocks.push(releasebuttons);
       let storedObj11 = replaceBody(
         storedObj10,
-        "Confirm release of ACME-6157 add new Phoenix functionality\n\nCommits:\n" +
+        "*Confirm release of ACME-6157 add new Phoenix functionality*\n\nCommits:\n```" +
           uservar +
-          " - ACME-6157 add new Phoenix functionality\n\nDiff:\nMOD src/Workflow/WorkflowLibrary/WorkflowLibrary.js",
+          " - ACME-6157 add new Phoenix functionality```\n\nDiff:\n```MOD src/Workflow/WorkflowLibrary/WorkflowLibrary.js```",
         body.message.ts,
         body.channel.id,
         500
@@ -351,7 +354,7 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
         }
       );
     }, 8800);
-    
+
     setTimeout(async () => {
       storedObj10.storedblocks[4].text.text =
         ":circleci: CircleCI Build <circleci.com|#8281> :circleci: - Not Started\n:loading:  *Waiting for CircleBuild*  :loading:";
@@ -365,13 +368,13 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
     for (let i = 1; i < 8; i++) {
       storedObj10 = await circleTimer(
         storedObj10,
-        i*5,
+        i * 5,
         true,
         body.message.ts,
         body.channel.id,
-        8900+(i*5000)
+        8900 + i * 5000
       );
-    };
+    }
     setTimeout(() => {
       storedObj10.storedblocks[2].text.text = "Deploy to QA?";
       const deployqa = require("./json/deploy-qa");
@@ -475,7 +478,103 @@ app.action("deployqa", async ({ ack, body, context }) => {
         blocks: storedObj8.storedblocks
       });
     }, 4500);
-  }catch(error){
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+//listener for yes button on deploy to prod
+app.action("deployprod", async ({ ack, body, context }) => {
+  await ack();
+  try {
+    let storedObj = await queryOne({ name: "storageObj" });
+    let storedObj2 = nextLine(
+      storedObj,
+      "\n :large_blue_circle:  31. Executing Confirm Choice 1",
+      true,
+      body.message.ts,
+      body.channel.id,
+      500
+    );
+    let storedObj3 = nextLine(
+      storedObj2,
+      "\n :large_blue_circle:  32. Executing SyncFilesToS3",
+      true,
+      body.message.ts,
+      body.channel.id,
+      1000
+    );
+    let storedObj4 = nextLine(
+      storedObj3,
+      "\n :large_blue_circle:  33. Synching directory /tmp/ACMEDevBot--1f031139-89eb-4dd8-9f21-dd8bae8d88f7-deploy3478279416825419021 to S3 Bucket\nstatic.prod.acmeenterprises.com ",
+      true,
+      body.message.ts,
+      body.channel.id,
+      1500
+    );
+    let storedObj5 = nextLine(
+      storedObj4,
+      "\n :large_blue_circle:  34. Executing SetCommitStatus",
+      true,
+      body.message.ts,
+      body.channel.id,
+      2000
+    );
+    let storedObj6 = nextLine(
+      storedObj5,
+      "\n :large_blue_circle:  35. Executing PushReleaseToMaster",
+      true,
+      body.message.ts,
+      body.channel.id,
+      2500
+    );
+    let storedObj7 = nextLine(
+      storedObj6,
+      "\n :large_blue_circle:  36. Pushed release caaf67b0a036f07304d3038f924c12a703c83503 to master",
+      true,
+      body.message.ts,
+      body.channel.id,
+      3000
+    );
+
+    setTimeout(async () => {
+      storedObj7.storedblocks[2].text.text = storedObj.storedblocks[2].text.text.replace(
+        ":large_blue_circle:",
+        ":white_check_mark:"
+      );
+      const divider = {
+			  "type": "divider"
+		  }
+      const deployfinished = {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: ":white_check_mark: DEPLOYMENT FINISHED :white_check_mark:\n*Started At:* STARTTIME \n*Finished At:* ENDTIME \n*Duration:* 5 minutes"
+        }
+      };
+      let today = new Date();
+      let date =
+      today.getFullYear() +
+      "-" +
+      (today.getMonth() + 1) +
+      "-" +
+      today.getDate();
+      let time =
+      today.getHours() + ":" + today.getMinutes();
+      let dateTime = date + " " + time;
+      let startTime = await queryOne({name:"startTime"});
+      deployfinished.text.text = deployfinished.text.text.replace("ENDTIME",dateTime);
+      deployfinished.text.text = deployfinished.text.text.replace("STARTTIME",startTime.startTime);
+      storedObj7.storedblocks.push(divider);
+      storedObj7.storedblocks.push(deployfinished);
+      const result2 = app.client.chat.update({
+        token: context.botToken,
+        ts: body.message.ts,
+        channel: body.channel.id,
+        blocks: storedObj7.storedblocks
+      });
+    }, 4500);
+  } catch (error) {
     console.error(error);
   }
 });
