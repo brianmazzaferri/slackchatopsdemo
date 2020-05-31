@@ -88,7 +88,7 @@ app.action("yesdeploy", async ({ ack, body, context }) => {
       "-" +
       today.getDate();
     let time =
-      today.getHours() + ":" + today.getMinutes();
+      (today.getHours()-5) + ":" + today.getMinutes();
     let dateTime = date + " " + time;
     let startTime = {name:"startTime"};
     startTime.startTime = dateTime;
@@ -111,10 +111,12 @@ app.action("yesdeploy", async ({ ack, body, context }) => {
       body.channel.id,
       1000
     );
-    await db.insert(storageObj2, (err, newDoc) => {
+    setTimeout(async()=>{
+      await db.insert(storageObj2, (err, newDoc) => {
       if (err) console.log("There's a problem with the database: ", err);
       else if (newDoc) console.log("storageObj insert completed");
     });
+    },1100);
     setTimeout(() => {
       storageObj2.storedblocks[2].text.text = "Choose an approved PR";
       const prSelector = require("./json/PR-selector");
@@ -157,7 +159,7 @@ app.action("prchosen", async ({ ack, body, context }) => {
     let storedObj3 = nextLine(
       storedObj2,
       "\n :large_blue_circle:  6. Created git repo: /tmp/ACMEDevBot-1f031139-89eb-4dd8-9f21-dd8bae8d88f74543252932594198521/.git",
-      false,
+      true,
       body.message.ts,
       body.channel.id,
       1200
@@ -560,7 +562,7 @@ app.action("deployprod", async ({ ack, body, context }) => {
       "-" +
       today.getDate();
       let time =
-      today.getHours() + ":" + today.getMinutes();
+      (today.getHours()-5) + ":" + today.getMinutes();
       let dateTime = date + " " + time;
       let startTime = await queryOne({name:"startTime"});
       deployfinished.text.text = deployfinished.text.text.replace("ENDTIME",dateTime);
