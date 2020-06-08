@@ -6,14 +6,42 @@ const Datastore = require("nedb"), //(require in the database)
   db = new Datastore({ filename: ".data/datafile", autoload: true }); //initialize the database
 
 const app = new App({
-  token: process.env.SLACK_BOT_TOKEN,
-  signingSecret: process.env.SLACK_SIGNING_SECRET
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  clientId: process.env.SLACK_CLIENT_ID,
+  clientSecret: process.env.SLACK_CLIENT_SECRET,
+  stateSecret: 'my-state-secret',
+  scopes: ['app_mentions:read', 'chat:write', 'chat:write.customize', 'chat:write.public', 'commands'],
+  installationStore: {
+    storeInstallation: (installation) => {
+      // change the line below so it saves to your database
+      console.log("INSTALLATION:");
+      console.log(installation);
+      return db.insert(installation, (err, newDoc) => {
+        if (err) console.log("There's a problem with the database ", err);
+        else if (newDoc) console.log("installation insert completed");
+      });
+    },
+    fetchInstallation: async (InstallQuery) => {
+      // change the line below so it fetches from your database
+      console.log("FETCH:");
+      console.log(InstallQuery);
+      let incomingteam = InstallQuery.teamId;
+      let result = await queryOne({"team.id":InstallQuery.teamId});
+      console.log(result);
+      return result;
+    },
+  },
 });
 
 app.command("/devbot", async ({ ack, payload, context }) => {
   await ack();
+  clearDatabase(payload.team_id,payload.channel_id);
   try {
-    clearDatabase();
+/*    const response = app.client.admin.emoji.add({
+      token:context.botToken,
+      name:"circleci",
+      url:"https://i.imgur.com/4ij6yY3.gif"
+    });*/
     let idvar = payload.text;
     idvar = idvar.replace("deploy ", "");
     const result = app.client.chat.postMessage({
@@ -90,7 +118,7 @@ app.action("yesdeploy", async ({ ack, body, context }) => {
     let time =
       (today.getHours()-5) + ":" + today.getMinutes();
     let dateTime = date + " " + time;
-    let startTime = {name:"startTime"};
+    let startTime = {name:"startTime", team:body.team.id, channel:body.channel.id};
     startTime.startTime = dateTime;
     db.insert(startTime);
     objnew = objnew.replace("TIMESTAMP", dateTime);
@@ -101,7 +129,7 @@ app.action("yesdeploy", async ({ ack, body, context }) => {
       channel: body.channel.id,
       blocks: objnew
     });
-    let storageObj = { name: "storageObj" };
+    let storageObj = { name: "storageObj", team:body.team.id, channel:body.channel.id };
     storageObj.storedblocks = JSON.parse(objnew);
     let storageObj2 = await nextLine(
       storageObj,
@@ -109,7 +137,8 @@ app.action("yesdeploy", async ({ ack, body, context }) => {
       false,
       body.message.ts,
       body.channel.id,
-      1000
+      1000,
+      context.botToken
     );
     setTimeout(async()=>{
       await db.insert(storageObj2, (err, newDoc) => {
@@ -136,7 +165,7 @@ app.action("yesdeploy", async ({ ack, body, context }) => {
 app.action("prchosen", async ({ ack, body, context }) => {
   await ack();
   try {
-    let storedObj = await queryOne({ name: "storageObj" });
+    let storedObj = await queryOne({ name: "storageObj", team:body.team.id, channel:body.channel.id });
     storedObj.storedblocks[0].text.text =
       storedObj.storedblocks[0].text.text +
       "\n *Release Notes:* <jira.com|ACME-6157> add new Phoenix functionality <github.com|(PR #1593)>";
@@ -146,7 +175,8 @@ app.action("prchosen", async ({ ack, body, context }) => {
       false,
       body.message.ts,
       body.channel.id,
-      200
+      200,
+      context.botToken
     );
     let storedObj2 = nextLine(
       storedObj,
@@ -154,7 +184,8 @@ app.action("prchosen", async ({ ack, body, context }) => {
       false,
       body.message.ts,
       body.channel.id,
-      1000
+      1000,
+      context.botToken
     );
     let storedObj3 = nextLine(
       storedObj2,
@@ -162,7 +193,8 @@ app.action("prchosen", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      1200
+      1200,
+      context.botToken
     );
     let storedObj4 = nextLine(
       storedObj3,
@@ -170,7 +202,8 @@ app.action("prchosen", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      1500
+      1500,
+      context.botToken
     );
     let storedObj5 = nextLine(
       storedObj4,
@@ -178,7 +211,8 @@ app.action("prchosen", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      2300
+      2300,
+      context.botToken
     );
     let storedObj6 = nextLine(
       storedObj5,
@@ -194,7 +228,8 @@ app.action("prchosen", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      3300
+      3300,
+      context.botToken
     );
     let storedObj8 = nextLine(
       storedObj7,
@@ -202,7 +237,8 @@ app.action("prchosen", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      3800
+      3800,
+      context.botToken
     );
     let storedObj9 = nextLine(
       storedObj8,
@@ -210,7 +246,8 @@ app.action("prchosen", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      4200
+      4200,
+      context.botToken
     );
     let storedObj10 = nextLine(
       storedObj9,
@@ -218,11 +255,12 @@ app.action("prchosen", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      4800
+      4800,
+      context.botToken
     );
     setTimeout(() => {
       db.update(
-        { name: "storageObj" },
+        { name: "storageObj", team: body.team.id, channel: body.channel.id },
         storedObj10,
         {},
         (err, numReplaced, affectedDocuments) => {
@@ -242,7 +280,8 @@ app.action("prchosen", async ({ ack, body, context }) => {
           " - ACME-6157 add new Phoenix functionality```\n\nDiff:\n```MOD src/Workflow/WorkflowLibrary/WorkflowLibrary.js```",
         body.message.ts,
         body.channel.id,
-        500
+        500,
+      context.botToken
       );
     }, 5500);
   } catch (error) {
@@ -254,14 +293,15 @@ app.action("prchosen", async ({ ack, body, context }) => {
 app.action("confirmrelease", async ({ ack, body, context }) => {
   await ack();
   try {
-    let storedObj = await queryOne({ name: "storageObj" });
+    let storedObj = await queryOne({ name: "storageObj", team:body.team.id, channel:body.channel.id });
     let storedObj2 = nextLine(
       storedObj,
       "\n :large_blue_circle:  14. Choosing Confirm choice 1",
       true,
       body.message.ts,
       body.channel.id,
-      500
+      500,
+      context.botToken
     );
     let storedObj3 = nextLine(
       storedObj2,
@@ -269,7 +309,8 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      1000
+      1000,
+      context.botToken
     );
     let storedObj4 = nextLine(
       storedObj3,
@@ -277,7 +318,8 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      1500
+      1500,
+      context.botToken
     );
     let storedObj5 = nextLine(
       storedObj4,
@@ -285,7 +327,8 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      2000
+      2000,
+      context.botToken
     );
     let storedObj6 = nextLine(
       storedObj5,
@@ -293,7 +336,8 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      2500
+      2500,
+      context.botToken
     );
     let storedObj7 = nextLine(
       storedObj6,
@@ -301,7 +345,8 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      3000
+      3000,
+      context.botToken
     );
     let storedObj8 = nextLine(
       storedObj7,
@@ -309,7 +354,8 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      3500
+      3500,
+      context.botToken
     );
     let storedObj9 = nextLine(
       storedObj8,
@@ -317,7 +363,8 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      4000
+      4000,
+      context.botToken
     );
     setTimeout(async () => {
       storedObj9.storedblocks.push({
@@ -331,7 +378,7 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
         }
       });
       const result = await app.client.chat.update({
-        token: process.env.SLACK_BOT_TOKEN,
+        token: context.botToken,
         ts: body.message.ts,
         channel: body.channel.id,
         blocks: storedObj9.storedblocks
@@ -343,11 +390,12 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      8800
+      8800,
+      context.botToken
     );
     setTimeout(() => {
       db.update(
-        { name: "storageObj" },
+        { name: "storageObj", team: body.team.id, channel: body.channel.id  },
         storedObj10,
         {},
         (err, numReplaced, affectedDocuments) => {
@@ -361,7 +409,7 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
       storedObj10.storedblocks[4].text.text =
         ":circleci: CircleCI Build <circleci.com|#8281> :circleci: - Not Started\n:loading:  *Waiting for CircleBuild*  :loading:";
       const result = await app.client.chat.update({
-        token: process.env.SLACK_BOT_TOKEN,
+        token: context.botToken,
         ts: body.message.ts,
         channel: body.channel.id,
         blocks: storedObj10.storedblocks
@@ -374,7 +422,8 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
         true,
         body.message.ts,
         body.channel.id,
-        8900 + i * 5000
+        8900 + i * 5000,
+        context.botToken
       );
     }
     setTimeout(() => {
@@ -389,7 +438,7 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
         channel: body.channel.id,
         blocks: storedObj10.storedblocks
       });
-    }, 44000);
+    }, 45000);
   } catch (error) {
     console.error(error);
   }
@@ -399,7 +448,7 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
 app.action("deployqa", async ({ ack, body, context }) => {
   await ack();
   try {
-    let storedObj = await queryOne({ name: "storageObj" });
+    let storedObj = await queryOne({ name: "storageObj", team:body.team.id, channel:body.channel.id });
     storedObj.storedblocks.pop();
     storedObj.storedblocks.pop();
     let storedObj2 = nextLine(
@@ -408,7 +457,8 @@ app.action("deployqa", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      500
+      500,
+      context.botToken
     );
     let storedObj3 = nextLine(
       storedObj2,
@@ -416,7 +466,8 @@ app.action("deployqa", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      1000
+      1000,
+      context.botToken
     );
     let storedObj4 = nextLine(
       storedObj3,
@@ -424,7 +475,8 @@ app.action("deployqa", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      1500
+      1500,
+      context.botToken
     );
     let storedObj5 = nextLine(
       storedObj4,
@@ -432,7 +484,8 @@ app.action("deployqa", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      2000
+      2000,
+      context.botToken
     );
     let storedObj6 = nextLine(
       storedObj5,
@@ -440,7 +493,8 @@ app.action("deployqa", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      2500
+      2500,
+      context.botToken
     );
     let storedObj7 = nextLine(
       storedObj6,
@@ -448,7 +502,8 @@ app.action("deployqa", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      3000
+      3000,
+      context.botToken
     );
     let storedObj8 = nextLine(
       storedObj7,
@@ -456,11 +511,12 @@ app.action("deployqa", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      3500
+      3500,
+      context.botToken
     );
     setTimeout(() => {
       db.update(
-        { name: "storageObj" },
+        { name: "storageObj", team: body.team.id, channel: body.channel.id  },
         storedObj8,
         {},
         (err, numReplaced, affectedDocuments) => {
@@ -489,14 +545,15 @@ app.action("deployqa", async ({ ack, body, context }) => {
 app.action("deployprod", async ({ ack, body, context }) => {
   await ack();
   try {
-    let storedObj = await queryOne({ name: "storageObj" });
+    let storedObj = await queryOne({ name: "storageObj", team:body.team.id, channel:body.channel.id });
     let storedObj2 = nextLine(
       storedObj,
       "\n :large_blue_circle:  31. Executing Confirm Choice 1",
       true,
       body.message.ts,
       body.channel.id,
-      500
+      500,
+      context.botToken
     );
     let storedObj3 = nextLine(
       storedObj2,
@@ -504,7 +561,8 @@ app.action("deployprod", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      1000
+      1000,
+      context.botToken
     );
     let storedObj4 = nextLine(
       storedObj3,
@@ -512,7 +570,8 @@ app.action("deployprod", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      1500
+      1500,
+      context.botToken
     );
     let storedObj5 = nextLine(
       storedObj4,
@@ -520,7 +579,8 @@ app.action("deployprod", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      2000
+      2000,
+      context.botToken
     );
     let storedObj6 = nextLine(
       storedObj5,
@@ -528,7 +588,8 @@ app.action("deployprod", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      2500
+      2500,
+      context.botToken
     );
     let storedObj7 = nextLine(
       storedObj6,
@@ -536,7 +597,8 @@ app.action("deployprod", async ({ ack, body, context }) => {
       true,
       body.message.ts,
       body.channel.id,
-      3000
+      3000,
+      context.botToken
     );
 
     setTimeout(async () => {
@@ -564,7 +626,7 @@ app.action("deployprod", async ({ ack, body, context }) => {
       let time =
       (today.getHours()-5) + ":" + today.getMinutes();
       let dateTime = date + " " + time;
-      let startTime = await queryOne({name:"startTime"});
+      let startTime = await queryOne({name:"startTime", team:body.team.id, channel:body.channel.id});
       deployfinished.text.text = deployfinished.text.text.replace("ENDTIME",dateTime);
       deployfinished.text.text = deployfinished.text.text.replace("STARTTIME",startTime.startTime);
       storedObj7.storedblocks.push(divider);
@@ -582,7 +644,7 @@ app.action("deployprod", async ({ ack, body, context }) => {
 });
 
 //append to the end of body section of storedBlocks
-function nextLine(storedObj, appendage, deletetop, ts, channel, timeout) {
+function nextLine(storedObj, appendage, deletetop, ts, channel, timeout, token) {
   setTimeout(async () => {
     storedObj.storedblocks[2].text.text = storedObj.storedblocks[2].text.text.replace(
       ":large_blue_circle:",
@@ -597,7 +659,7 @@ function nextLine(storedObj, appendage, deletetop, ts, channel, timeout) {
       );
     }
     const result = await app.client.chat.update({
-      token: process.env.SLACK_BOT_TOKEN,
+      token: token,
       ts: ts,
       channel: channel,
       blocks: storedObj.storedblocks
@@ -607,14 +669,14 @@ function nextLine(storedObj, appendage, deletetop, ts, channel, timeout) {
 }
 
 //advance CircleCI timer by 0:05
-function circleTimer(storedObj, time, deletetop, ts, channel, timeout) {
+function circleTimer(storedObj, time, deletetop, ts, channel, timeout, token) {
   setTimeout(async () => {
     storedObj.storedblocks[4].text.text =
       ":circleci: CircleCI Build <circleci.com|#8281> :circleci: - Running for 00:" +
       time +
       "\n:loading:  *Waiting for CircleBuild*  :loading:";
     const result = await app.client.chat.update({
-      token: process.env.SLACK_BOT_TOKEN,
+      token: token,
       ts: ts,
       channel: channel,
       blocks: storedObj.storedblocks
@@ -624,11 +686,11 @@ function circleTimer(storedObj, time, deletetop, ts, channel, timeout) {
 }
 
 //replace the body section of storedBlocks
-function replaceBody(storedObj, newBody, ts, channel, timeout) {
+function replaceBody(storedObj, newBody, ts, channel, timeout, token) {
   setTimeout(async () => {
     storedObj.storedblocks[2].text.text = newBody;
     const result = await app.client.chat.update({
-      token: process.env.SLACK_BOT_TOKEN,
+      token: token,
       ts: ts,
       channel: channel,
       blocks: storedObj.storedblocks
@@ -657,8 +719,8 @@ function printDatabase() {
 }
 
 //clear out the database
-function clearDatabase() {
-  db.remove({}, { multi: true }, function(err) {
+function clearDatabase(team,channel) {
+  db.remove({team:team, channel:channel}, { multi: true }, function(err) {
     if (err) console.log("There's a problem with the database: ", err);
     else console.log("database cleared");
   });
