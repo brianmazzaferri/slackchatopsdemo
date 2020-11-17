@@ -438,7 +438,7 @@ app.action("confirmrelease", async ({ ack, body, context }) => {
         channel: body.channel.id,
         blocks: storedObj10.storedblocks
       });
-    }, 45000);
+    }, 30000);
   } catch (error) {
     console.error(error);
   }
